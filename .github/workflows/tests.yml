@@ -1,0 +1,31 @@
+# Copy to .github/workflows/tests.yml in your own GitHub repo (e.g. a new
+# "hunter-prep-labs" repo with the lab folders at the root), push, and watch
+# the Actions tab. Runs the offline labs on every push and pull request.
+name: tests
+on:
+  push:
+  pull_request:
+  workflow_dispatch:        # lets you click "Run workflow" by hand
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: pip install pytest pytest-bdd
+      - name: SQL migration checks
+        run: pytest lab1_sql_migration_checks -v --junitxml=reports/sql.xml
+      - name: BDD scenarios
+        run: pytest lab4_bdd_gherkin -v --junitxml=reports/bdd.xml
+      - name: Mock controller suite
+        run: pytest ex7_mock_controller -v --junitxml=reports/controller.xml
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: junit-reports
+          path: reports/
